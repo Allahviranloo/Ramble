@@ -26,7 +26,7 @@ export const useAuth = () => {
 
     const logout = async () => {
         try {
-            await fetch('http://localhost:3000/api/logout', {method: 'POST'});
+            await fetch('http://localhost:5000/api/logout', {method: 'POST'});
         } catch (error) {
             console.error('Logout didn\'t reach server:', error);
         }
