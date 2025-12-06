@@ -1,0 +1,52 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String     @id @default(uuid())
+  email         String     @unique
+  password_hash String
+  created_at    DateTime   @default(now())
+
+  profile       Profile?
+  posts         Post[]
+  followers     Follow[] @relation("Following")
+  following     Follow[] @relation("Follower")
+}
+
+model Profile {
+  id                  String  @id @default(uuid())
+  user_id             String  @unique
+  display_name        String
+  bio                 String?
+  profile_picture_url String?
+
+  user                User    @relation(fields: [user_id], references: [id])
+}
+
+model Post {
+  id         String   @id @default(uuid())
+  owner_id   String
+  media_url  String
+  caption    String?
+  created_at DateTime @default(now())
+
+  owner      User     @relation(fields: [owner_id], references: [id])
+}
+
+model Follow {
+  id           String   @id @default(uuid())
+  follower_id  String
+  following_id String
+  created_at   DateTime @default(now())
+
+  follower     User     @relation("Follower", fields: [follower_id], references: [id])
+  following    User     @relation("Following", fields: [following_id], references: [id])
+
+  @@unique([follower_id, following_id])
+}
