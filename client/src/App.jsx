@@ -1,5 +1,4 @@
-// App.jsx (in client/src)
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from './useAuth.jsx'; 
 import './App.css'; 
 
@@ -32,7 +31,7 @@ const AuthForm = ({ isLogin, auth }) => {
       if (response.ok) {
         setMessage(`Success! ${data.message}`);
         if (isLogin) {
-          auth.login(data.userId, data.token);
+          auth.login(data.userId);
         }
       } else {
         setMessage(`${isLogin ? 'Login' : 'Registration'} Failed: ${data.error}`);
@@ -73,13 +72,66 @@ const AuthForm = ({ isLogin, auth }) => {
 function App() {
   const auth = useAuth();
   const [isLoginView, setIsLoginView] = useState(true);
+  const [userProfile, setUserProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!auth.isAuthenticated || !auth.userId) return;
+      
+      setLoadingProfile(true);
+      try {
+        const response = await fetch(`http://localhost:5000/api/profile/${auth.userId}`, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setUserProfile(data.user);
+        } else {
+          console.error('Failed to fetch profile');
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [auth.isAuthenticated, auth.userId]);
 
   if (auth.isAuthenticated) {
+    const displayName = userProfile?.profile?.display_name || `User ${auth.userId?.substring(0, 8)}`;
+    const avatarInitial = displayName.charAt(0).toUpperCase();
+
     return (
       <div className="App">
-        <h1>Welcome back, User {auth.userId.substring(0, 8)}...</h1>
-        <p>You are logged in and your token is: **{auth.token.substring(0, 15)}...**</p>
-        <button onClick={auth.logout}>Log Out</button>
+        <div className="profile-container">
+          <div className="profile-card">
+            <div className="profile-left">
+              <div className="profile-pic">
+                <div className="avatar">
+                  {avatarInitial}
+                </div>
+              </div>
+            </div>
+
+            <div className="profile-right">
+              <div className="profile-header">
+                <h2 className="username">{displayName}</h2>
+                <div className="online-status">
+                  <span className="status-dot online"></span>
+                  <span className="status-text">Online</span>
+                </div>
+              </div>
+
+              <button className="logout-btn" onClick={auth.logout}>
+                Log Out
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -87,9 +139,12 @@ function App() {
   return (
     <div className="App">
       <AuthForm isLogin={isLoginView} auth={auth} />
-      <p>
+      <p className="auth-toggle">
         {isLoginView ? "Need an account?" : "Already have an account?"}
-        <button onClick={() => setIsLoginView(!isLoginView)}>
+        <button 
+          className="toggle-btn" 
+          onClick={() => setIsLoginView(!isLoginView)}
+        >
           {isLoginView ? "Register Here" : "Login Here"}
         </button>
       </p>

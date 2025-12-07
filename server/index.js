@@ -138,7 +138,7 @@ app.post('/api/login', async (req, res) => {
             sameSite: 'Lax'
         });
 
-        res.status(200).json({ message: "Login successful!", userId: user.id });
+        res.status(200).json({ message: "Login successful!", userId: user.id, token: token });
     } catch (error) {
         console.error("Login error:", error);
         res.status(500).json({ error: "Server error during login" });

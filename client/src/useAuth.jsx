@@ -1,5 +1,5 @@
 // useAuth.jsx
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
 
 const USER_ID_KEY = 'auth_userId';
 const TOKEN_KEY = 'auth_token';
@@ -21,7 +21,7 @@ export const useAuth = () => {
 
     const login = (newUserId, newToken) => {
         setUserId(newUserId);
-        setToken(newToken);
+        setToken(newToken || 'placeholder-token');
     };
 
     const logout = async () => {
