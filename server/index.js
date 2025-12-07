@@ -192,6 +192,67 @@ app.get('/api/user', authenticateToken, async (req, res) => {
     }
 });
 
+app.get('/api/profile/:userId', authenticateToken, async (req, res) => {
+    const targetUserId = req.params.userId;
+    
+    try {
+        const profileQuery = `
+            SELECT 
+                u.id, 
+                u.email, 
+                u.created_at, 
+                p.display_name,
+                p.bio,
+                p.profile_picture_url,
+                (SELECT COUNT(*) FROM "Follow" WHERE following_id = u.id) AS followers_count,
+                (SELECT COUNT(*) FROM "Follow" WHERE follower_id = u.id) AS following_count
+            FROM "User" u
+            LEFT JOIN "Profile" p ON u.id = p.user_id
+            WHERE u.id = $1;
+        `;
+
+        const profileResult = await pool.query(profileQuery, [targetUserId]);
+        const profileData = profileResult.rows[0];
+
+        if (!profileData) {
+            return res.status(404).json({ error: "User not found." });
+        }
+
+        const postsQuery = `
+            SELECT 
+                id,
+                media_url,
+                caption,
+                created_at
+            FROM "Post" 
+            WHERE owner_id = $1
+            ORDER BY created_at DESC
+            LIMIT 20; -- Only fetch the 20 most recent posts for efficiency
+        `;
+        const postsResult = await pool.query(postsQuery, [targetUserId]);
+        
+        const finalProfile = {
+            id: profileData.id,
+            email: profileData.email,
+            created_at: profileData.created_at,
+            profile: {
+                display_name: profileData.display_name,
+                bio: profileData.bio,
+                profile_picture_url: profileData.profile_picture_url,
+                followers_count: parseInt(profileData.followers_count), 
+                following_count: parseInt(profileData.following_count), 
+            },
+            posts: postsResult.rows
+        };
+
+        res.json({ message: "Successfully fetched user profile.", user: finalProfile });
+
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        res.status(500).json({ error: "Server error fetching profile data." });
+    }
+});
+
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
