@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './useAuth.jsx'; 
 import './App.css'; 
+import logo from './ramble_logo.jpg'
 
 const AuthForm = ({ isLogin, auth }) => {
   const [email, setEmail] = useState('');
@@ -24,6 +25,7 @@ const AuthForm = ({ isLogin, auth }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
+        credentials: 'include'
       });
 
       const data = await response.json();
@@ -31,7 +33,7 @@ const AuthForm = ({ isLogin, auth }) => {
       if (response.ok) {
         setMessage(`Success! ${data.message}`);
         if (isLogin) {
-          auth.login(data.userId);
+          auth.login(data.userId, data.token);
         }
       } else {
         setMessage(`${isLogin ? 'Login' : 'Registration'} Failed: ${data.error}`);
@@ -46,18 +48,24 @@ const AuthForm = ({ isLogin, auth }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2>{isLogin ? 'Ramble' : 'Create Account'}</h2>
+      {isLogin ? (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <img 
+          src={logo} 
+          style={{ width: '250px', height: '250' }}
+        />
+      </div>) : (<h2 style={{ color: 'white' }}>Create Account</h2>)}
       <div>
-        <label>Email:</label>
+        <label style={{ color: 'white' }}>Email:</label>
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
       </div>
       <div>
-        <label>Password:</label>
+        <label style={{ color: 'white' }}>Password:</label>
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
       </div>
       {!isLogin && (
         <div>
-          <label>Display Name:</label>
+          <label style={{ color: 'white' }}>Display Name:</label>
           <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
         </div>
       )}
@@ -87,6 +95,7 @@ function App() {
         
         if (response.ok) {
           const data = await response.json();
+          console.log("Recieved Profile Data:", data.user)
           setUserProfile(data.user);
         } else {
           console.error('Failed to fetch profile');
@@ -102,34 +111,27 @@ function App() {
   }, [auth.isAuthenticated, auth.userId]);
 
   if (auth.isAuthenticated) {
-    const displayName = userProfile?.profile?.display_name || `User ${auth.userId?.substring(0, 8)}`;
-    const avatarInitial = displayName.charAt(0).toUpperCase();
+    const displayName = userProfile?.profile?.display_name || `${auth.userId?.substring(0, 5)}`;
+    const userBio = userProfile?.profile?.bio || 'No biography yet.'
 
     return (
       <div className="App">
         <div className="profile-container">
           <div className="profile-card">
-            <div className="profile-left">
               <div className="profile-pic">
-                <div className="avatar">
-                  {avatarInitial}
-                </div>
-              </div>
-            </div>
-
-            <div className="profile-right">
-              <div className="profile-header">
-                <h2 className="username">{displayName}</h2>
-                <div className="online-status">
-                  <span className="status-dot online"></span>
-                  <span className="status-text">Online</span>
-                </div>
+                <div className="avatar"></div>
+                
+                <h2 className="username">{displayName}
+                  <div className="online-status">
+                    <span className="status-dot online"></span>
+                    <span className="status-text">Online</span>
+                  </div>
+                </h2>
               </div>
 
               <button className="logout-btn" onClick={auth.logout}>
                 Log Out
               </button>
-            </div>
           </div>
         </div>
       </div>

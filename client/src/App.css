@@ -1,7 +1,7 @@
 /* App.css */
 
 body {
-    background-color: #9069de;
+    background-color: rgb(53, 53, 51);
     color: rgb(0, 0, 0); 
     margin: 0;
     min-height: 100vh;
@@ -24,7 +24,7 @@ body {
 
 /* Login/Register Form Styles */
 form {
-    background-color: #d6c3ff;
+    background-color: #1f2018ff;
     padding: 30px 40px;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
@@ -57,7 +57,7 @@ input {
     padding: 10px;
     border: none;
     border-radius: 5px;
-    background-color: #eeeeee;
+    background-color: #ffffff;
     color: #333;
     font-size: 1em;
 }
@@ -75,12 +75,12 @@ form button {
     width: 100%;
     padding: 12px;
     margin-top: 20px;
-    background-color: #b68cff;
-    color: #282c34;
+    background-color: #b33e3e;
+    color: #ffffff;
 }
 
 form button:hover:not([disabled]) {
-    background-color: #f5efff;
+    background-color: #521313;
 }
 
 button[disabled] {
@@ -94,16 +94,14 @@ button[disabled] {
 }
 
 .toggle-btn {
-    background: none;
-    border: 2px solid white;
+    background: #1f2018ff;
     color: white;
     padding: 8px 20px;
     margin-left: 10px;
 }
 
 .toggle-btn:hover {
-    background-color: white;
-    color: #9069de;
+    background-color: #b33e3e;
 }
 
 .success {
@@ -131,53 +129,44 @@ button[disabled] {
     border-radius: 15px;
     padding: 40px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-    width: 600px; 
+    width: 90%; 
+    height: 800px;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     text-align: center;
     gap: 30px; 
 }
 
-.profile-left {
-    display: block;
-}
-
 .profile-pic {
     margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
 .avatar {
-    width: 60px;
-    height: 60px; 
+    width: 80px;
+    height: 80px; 
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #db2e2e 0%, #312f32 100%);
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-start;
+    justify-content: flex-start;
     color: white;
     font-size: 1.5rem; 
     font-weight: bold;
 }
 
-.profile-right {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center; 
-    width: 100%;
-}
-
 .profile-header {
     margin-bottom: 25px;
-    text-align: center;
+    text-align: left;
 }
 
 .username {
     font-size: 2rem; 
-    margin: 0 0 10px 0;
     color: #333;
-    font-weight: 700;
+    font-weight: bold;
     line-height: 1.2;
 }
 
@@ -206,55 +195,8 @@ button[disabled] {
     font-weight: 500;
 }
 
-/* User Info Section */
-.user-info {
-    margin-bottom: 30px;
-    padding: 20px 0;
-    border-top: 1px solid #eee;
-    border-bottom: 1px solid #eee;
-    width: 100%;
-}
-
-.info-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 12px;
-}
-
-.info-label {
-    font-weight: 600;
-    color: #555;
-    width: 120px;
-    font-size: 0.9rem;
-    text-align: right;
-    padding-right: 10px;
-}
-
-.info-value {
-    color: #333;
-    font-size: 0.95rem;
-    text-align: left;
-    width: 180px;
-}
-
-.bio-section {
-    margin-top: 15px;
-    text-align: center;
-}
-
-.bio-text {
-    margin: 5px 0 0 0;
-    color: #444;
-    font-size: 0.9rem;
-    line-height: 1.5;
-    padding-left: 0; 
-    max-width: 400px;
-    margin: 0 auto;
-}
-
 .logout-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #e23030 0%, #3f3e40 100%);
     color: white;
     border: none;
     padding: 12px 40px;
@@ -264,8 +206,8 @@ button[disabled] {
     transition: transform 0.2s, box-shadow 0.2s;
     width: 100%;
     max-width: 200px;
-    align-self: center;
-    margin-top: 20px;
+    align-self: flex-end;
+    margin-top: 590px;
 }
 
 .logout-btn:hover {
@@ -275,38 +217,4 @@ button[disabled] {
 
 .loading {
     opacity: 0.7;
-}
-
-@media (max-width: 768px) {
-    .profile-card {
-        width: 90%;
-        flex-direction: column;
-        padding: 30px;
-        gap: 20px;
-    }
-    
-    .avatar {
-        width: 60px;
-        height: 60px;
-        font-size: 1.5rem;
-    }
-    
-    .username {
-        font-size: 1.8rem;
-    }
-    
-    .profile-right {
-        width: 100%;
-        align-items: center;
-    }
-    
-    .logout-btn {
-        align-self: center;
-    }
-    
-    form {
-        width: 90%;
-        max-width: 350px;
-        padding: 20px;
-    }
 }
