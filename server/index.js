@@ -269,6 +269,74 @@ app.get('/api/profile/:userId', authenticateToken, async (req, res) => {
     }
 });
 
+app.get('/api/search/users', authenticateToken, async (req, res) => {
+    const {query} = req.query;
+    const currentUserId = req.user.userId;
+
+    if(!query || query.trim().length == 0)
+    {
+        return res.status(400).json({error: "You need to search for something!"});
+    }
+
+    try {
+        const searchQuery = 'SELECT u.id, p.display_name, p.profile_picture_url, EXISTS(SELECT 1 FROM "Follow" WHERE follower_id = $1 AND following_id = u.id) AS is_following FROM "User" u LEFT JOIN "Profile" p ON u.id = p.user_id WHERE LOWER(p.display_name) LIKE LOWER($2) AND u.id != $1 LIMIT 20';
+        const result = await pool.query(searchQuery, [currentUserId, `%${query}%`]);
+
+        res.json({users:result.rows});
+    } catch(error) {
+        console.error("Search error:", error);
+        res.status(500).json({error: "Server error during search"});
+    }
+});
+
+app.post('/api/follow/:userId', authenticateToken, async (req, res) => {
+    const currentUserId = req.user.userId;
+    const targetUserId = req.params.userId;
+
+    if(currentUserId == targetUserId)
+    {
+        return res.status(400).json({error: "You can only follow other people" });
+    }
+
+    try {
+        const checkQuery = 'SELECT id FROM "Follow" WHERE follower_id = $1 AND following_id = $2';
+
+        if(existing.rows.length > 0)
+        {
+            return res.status(400).json({error: "Already following this user"});
+        }
+
+        const followQuery = 'INSET INTO "Follow" (follower_id, following_id, created_at) VALUES ($1, $2, NOW()) RETURNING *;';
+        await pool.query(followQuery, [currentUserId, targetUserId]);
+
+        res.status(201).json({message: "You\'re following this user"});
+    } catch(error)
+    {
+        console.error("Follow error:", error);
+        res.status(500).json({error: "Server error while following user"});
+    }
+});
+
+app.delete('/api/follow/:userId', authenticateToken, async (req, res) => {
+    const currentUserId = req.user.userId;
+    const targetUserId = req.params.userId;
+
+    try {
+        const unfollowQuery = 'DELETE FROM "Follow" WHERE follower_id = $1 AND following_id = $2 RETURNING *;';
+        const result = await pool.query(unfollowQuery, [currentUserId, targetUserId]);
+
+        if(result.rows.length == 0)
+        {
+            return res.status(404).json({error: "Following relationship not found"});
+        }
+
+        res.json({message: "Unfollowed user"});
+    } catch(error)
+    {
+        console.error("Unfollow error:", error);
+        res.status(500).json({error: "Server error while unfollowing user"});
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);

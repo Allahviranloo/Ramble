@@ -207,17 +207,20 @@ button[disabled] {
     width: 100%;
     max-width: 200px;
     align-self: flex-start;
-    margin-top: 430px;
+    margin-top: 440px;
 }
 
 .edit-btn {
-    background: #b33e3e;
+    background: linear-gradient(135deg, #e23030 0%, #3f3e40 100%);
     color: white;
     border: none;
     padding: 10px 30px;
     border-radius: 25px;
     font-weight: 600;
     margin-top: 20px;
+    height: 40px;
+    width: 135px;
+    font-size: 0.9rem;
 }
 
 .logout-btn:hover {
