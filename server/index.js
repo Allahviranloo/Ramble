@@ -154,6 +154,22 @@ app.post('/api/logout', (req, res) => {
     res.status(200).json({ message: "Logout successful." });
 });
 
+app.put('/api/editprofile', authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
+    const {display_name, bio} = req.body;
+
+    try {
+        const updateQuery = 'UPDATE "Profile" SET display_name = $1, bio = $2 WHERE user_id = $3 RETURNING *;';
+        const result = await pool.query(updateQuery, [display_name, bio, userId]);
+
+        res.status(200).json({message: "Profile successfully updated!", profile: result.rows[0]});
+    } catch(error)
+    {
+        console.error("Error:", error);
+        res.status(500).json({error: error.message});
+    }
+});
+
 app.get('/api/user', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId;
