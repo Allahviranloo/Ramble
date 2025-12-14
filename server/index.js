@@ -300,16 +300,17 @@ app.post('/api/follow/:userId', authenticateToken, async (req, res) => {
 
     try {
         const checkQuery = 'SELECT id FROM "Follow" WHERE follower_id = $1 AND following_id = $2';
+        const existing = await pool.query(checkQuery, [currentUserId, targetUserId]); 
 
         if(existing.rows.length > 0)
         {
             return res.status(400).json({error: "Already following this user"});
         }
 
-        const followQuery = 'INSET INTO "Follow" (follower_id, following_id, created_at) VALUES ($1, $2, NOW()) RETURNING *;';
+        const followQuery = 'INSERT INTO "Follow" (follower_id, following_id, created_at) VALUES ($1, $2, NOW()) RETURNING *;'; 
         await pool.query(followQuery, [currentUserId, targetUserId]);
 
-        res.status(201).json({message: "You\'re following this user"});
+        res.status(201).json({message: "You're following this user"}); 
     } catch(error)
     {
         console.error("Follow error:", error);
