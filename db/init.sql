@@ -25,8 +25,7 @@ CREATE TABLE "Profile" (
 CREATE TABLE "Post" (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     owner_id UUID NOT NULL,
-    media_url TEXT NOT NULL,
-    caption TEXT,
+    caption TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
 
     CONSTRAINT fk_post_owner

@@ -33,9 +33,7 @@ const AuthForm = ({ isLogin, auth }) => {
 
       if (response.ok) {
         setMessage(`Success! ${data.message}`);
-        if (isLogin) {
-          auth.login(data.userId, data.token);
-        }
+        auth.login(data.userId, data.token);
       } else {
         setMessage(`${isLogin ? 'Login' : 'Registration'} Failed: ${data.error}`);
       }
@@ -249,86 +247,31 @@ const SearchModal = ({onClose, currentUserId, onUserClick}) => {
             value={searchQuery} 
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            style={{
-              flex: 1,
-              padding: '10px',
-              border: '1px solid #ddd',
-              borderRadius: '5px'
-            }}
+            style={{flex: 1, padding: '10px', border: '1px solid #ddd', borderRadius: '5px'}}
           />
-          <button 
-            onClick={handleSearch}
-            disabled={searching}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#b33e3e',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}
-          >
+          <button onClick={handleSearch} disabled={searching} style={{padding: '10px 20px', backgroundColor: '#b33e3e', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer'}}>
             {searching ? 'Searching...' : 'Search'}
           </button>
         </div>
 
         {message && (
-          <p style={{ 
-            color: message.includes('Error') || message.includes('error') ? '#f44336' : '#666',
-            marginBottom: '15px',
-            textAlign: 'center'
-          }}>
+          <p style={{color: message.includes('Error') || message.includes('error') ? '#f44336' : '#666', marginBottom: '15px', textAlign: 'center'}}>
             {message}
           </p>
         )}
 
-        <div style={{ 
-          flex: 1, 
-          overflowY: 'auto',
-          marginBottom: '15px'
-        }}>
+        <div style={{flex: 1,  overflowY: 'auto', marginBottom: '15px'}}>
           {searchResults.map(user => (
-            <div 
-              key={user.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '15px',
-                borderBottom: '1px solid #eee',
-                cursor: 'pointer'
-              }}
-            >
+            <div key={user.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px', borderBottom: '1px solid #eee', cursor: 'pointer'}}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #db2e2e 0%, #312f32 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontWeight: 'bold'
-                }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #db2e2e 0%, #312f32 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold'}}>
                   {user.display_name[0].toUpperCase()}
                 </div>
                 <span style={{ fontSize: '1rem', color: '#333' }}>
                   {user.display_name}
                 </span>
               </div>
-              <button
-                onClick={() => handleFollow(user.id, user.is_following)}
-                style={{
-                  padding: '8px 20px',
-                  backgroundColor: user.is_following ? '#666' : '#b33e3e',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '20px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem'
-                }}
-              >
+              <button onClick={() => handleFollow(user.id, user.is_following)} style={{ padding: '8px 20px', backgroundColor: user.is_following ? '#666' : '#b33e3e', color: 'white', border: 'none', borderRadius: '20px', cursor: 'pointer', fontSize: '0.9rem'}}>
                 {user.is_following ? 'Unfollow' : 'Follow'}
               </button>
             </div>
@@ -337,15 +280,7 @@ const SearchModal = ({onClose, currentUserId, onUserClick}) => {
 
         <button 
           onClick={onClose}
-          style={{
-            padding: '10px',
-            backgroundColor: '#666',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer'
-          }}
-        >
+          style={{ padding: '10px', backgroundColor: '#666', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer'}}>
           Close
         </button>
       </div>
@@ -448,7 +383,7 @@ function App() {
                 🔍
                 </button>
               </div>
-              <p style={{ color: '#666', textAlign: 'left', marginTop: '10px', maxWidth: '500px'}}>
+              <p style={{ color: '#666', textAlign: 'left', marginTop: '10px', maxWidth: '180px'}}>
                 {userBio}
               </p>
 

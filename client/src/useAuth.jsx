@@ -6,34 +6,31 @@ const TOKEN_KEY = 'auth_token';
 
 export const useAuth = () => {
     const [userId, setUserId] = useState(() => localStorage.getItem(USER_ID_KEY));
-    const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
     const isAuthenticated = !!userId;
 
     useEffect(() => {
         if (userId) {
             localStorage.setItem(USER_ID_KEY, userId);
-            localStorage.setItem(TOKEN_KEY, token);
         } else {
             localStorage.removeItem(USER_ID_KEY);
-            localStorage.removeItem(TOKEN_KEY);
         }
-    }, [userId, token]);
+    }, [userId]);
 
-    const login = (newUserId, newToken) => {
+    const login = (newUserId) => {
         setUserId(newUserId);
-        setToken(newToken || 'placeholder-token');
     };
 
     const logout = async () => {
         try {
-            await fetch('http://localhost:5000/api/logout', {method: 'POST'});
+            await fetch('http://localhost:5000/api/logout', {
+                method: 'POST',
+                credentials: 'include' 
+            });
         } catch (error) {
             console.error('Logout didn\'t reach server:', error);
         }
-
         setUserId(null);
-        setToken(null);
     };
 
-    return { userId, token, isAuthenticated, login, logout };
+    return { userId, isAuthenticated, login, logout };
 };

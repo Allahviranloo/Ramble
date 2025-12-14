@@ -92,6 +92,15 @@ app.post('/api/register', async (req, res) => {
 
         await connection.query('COMMIT'); 
 
+        const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 3600000,
+            sameSite: 'Lax'
+        });
+        
         res.status(201).json({ message: "Registered Successfully!", userId });
 
     } catch (error) {
@@ -237,13 +246,12 @@ app.get('/api/profile/:userId', authenticateToken, async (req, res) => {
         const postsQuery = `
             SELECT 
                 id,
-                media_url,
-                caption,
+                caption,  /* Changed from 'content' to 'caption' */
                 created_at
             FROM "Post" 
             WHERE owner_id = $1
             ORDER BY created_at DESC
-            LIMIT 20; -- Only fetch the 20 most recent posts for efficiency
+            LIMIT 20;
         `;
         const postsResult = await pool.query(postsQuery, [targetUserId]);
         
