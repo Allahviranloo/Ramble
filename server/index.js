@@ -347,6 +347,93 @@ app.delete('/api/follow/:userId', authenticateToken, async (req, res) => {
     }
 });
 
+app.post('/api/posts', authenticateToken, async (req,res) => {
+    const userId = req.user.userId;
+    const {caption} = req.body;
+
+    if(!caption || caption.trim().length == 0)
+    {
+        return res.status(400).json({error: "You can\'t post nothing"});
+    }
+
+    try {
+        const insertQuery = `
+            INSERT INTO "Post" (owner_id, caption, created_at) 
+            VALUES ($1, $2, NOW()) 
+            RETURNING *;
+        `;
+        const result = await pool.query(insertQuery, [userId, caption.trim()]);
+
+        res.status(201).json({ 
+            message: "Post created successfully!", 
+            post: result.rows[0] 
+        });
+    } catch(error) {
+        console.error("Create post error:", error)
+        res.status(500).json({error: "Server error when creating post"});
+    }
+});
+
+app.get('/api/posts/feed', authenticateToken, async (req,res) => {
+    const userId = req.user.userId;
+
+    try {
+        const feedQuery = `
+            SELECT 
+                p.id,
+                p.owner_id,
+                p.caption,
+                p.created_at,
+                pr.display_name
+            FROM "Post" p
+            JOIN "Profile" pr ON p.owner_id = pr.user_id
+            WHERE p.owner_id = $1 
+                OR p.owner_id IN (
+                    SELECT following_id 
+                    FROM "Follow" 
+                    WHERE follower_id = $1
+                )
+            ORDER BY p.created_at DESC
+            LIMIT 50;
+        `;
+
+        const result = await pool.query(feedQuery, [userId]);
+
+        res.json({posts: result.rows});
+    } catch(error) {
+        console.error("Feed fetch error:", error);
+        res.status(500).json({error: "Server error when fetching feed"});
+    }
+});
+
+app.delete('/api/posts/:postId', authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
+    const postId = req.params.postId;
+
+    try {
+        const checkQuery = 'SELECT owner_id FROM "Post" WHERE id = $1';
+        const checkResult = await pool.query(checkQuery, [postId]);
+
+        if(checkResult.rows.length === 0)
+        {
+            return res.status(404).json({error: "Post not found"});
+        }
+
+        if(checkResult.rows[0].owner_id !== userId)  
+        {
+            return res.status(403).json({error: "You can only delete your own posts"});
+        }
+
+        const deleteQuery = 'DELETE FROM "Post" WHERE id = $1 RETURNING *';
+        await pool.query(deleteQuery, [postId]);
+
+        res.json({message: "Post deleted!"});
+    } catch(error) {
+        console.error("Delete post error:", error);
+        res.status(500).json({error: "Server error while deleting post"});
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });

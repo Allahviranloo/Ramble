@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from './useAuth.jsx'; 
 import './App.css'; 
 import logo from './ramble_logo.jpg'
-import searchIcon from './search_logo.png'
 
 const AuthForm = ({ isLogin, auth }) => {
   const [email, setEmail] = useState('');
@@ -163,7 +162,7 @@ const SearchModal = ({onClose, currentUserId, onUserClick}) => {
   const [message, setMessage] = useState('');
 
   const handleSearch = async() => {
-    if(searchQuery.trim().length == 0) {
+    if(searchQuery.trim().length === 0) {
       setMessage('Please enter a search term');
       return;
     }
@@ -288,6 +287,190 @@ const SearchModal = ({onClose, currentUserId, onUserClick}) => {
   );
 };
 
+const CreatePostForm = ({ onPostCreated }) => {
+  const [caption, setCaption] = useState('');
+  const [posting, setPosting] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (caption.trim().length === 0) {
+      setMessage('Post cannot be empty');
+      return;
+    }
+
+    setPosting(true);
+    setMessage('');
+
+    try {
+      const response = await fetch('http://localhost:5000/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ caption }),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setCaption('');
+        setMessage('Posted!');
+        onPostCreated();
+        setTimeout(() => setMessage(''), 2000);
+      } else {
+        setMessage(`Error: ${data.error}`);
+      }
+    } catch (error) {
+      setMessage('Network error');
+      console.error(error);
+    } finally {
+      setPosting(false);
+    }
+  };
+
+  return (
+    <div className="create-post-form">
+      <form onSubmit={handleSubmit}>
+        <textarea
+          placeholder="What's on your mind?"
+          value={caption}
+          onChange={(e) => setCaption(e.target.value)}
+
+          style={{width: '100%',  padding: '8px',  resize: 'vertical', backgroundColor: '#ffffff', color: '#333', border: '1px solid #ddd', borderRadius: '5px', fontFamily: 'inherit'}}
+        />
+        <button type="submit" disabled={posting}>
+          {posting ? 'Posting...' : 'Post'}
+        </button>
+      </form>
+      {message && (
+        <p style={{
+          marginTop: '10px',
+          fontSize: '0.9rem',
+          color: message.includes('Error') ? '#f44336' : '#4CAF50'
+        }}>
+          {message}
+        </p>
+      )}
+    </div>
+  );
+};
+
+const CreatePostModal = ({ onClose, onPostCreated }) => {
+  const handlePostCreation = () => {
+    onPostCreated(); 
+  };
+
+  return (
+    <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100}}>
+      <div style={{backgroundColor: 'white', padding: '30px', borderRadius: '10px', width: '400px', maxWidth: '90%', display: 'flex', flexDirection: 'column'}}>
+        <h2 style={{ marginTop: 0, color: '#333' }}>Create New Post</h2>
+        <CreatePostForm onPostCreated={() => { handlePostCreation(); onClose(); }} />
+        <button 
+          onClick={onClose} 
+          style={{marginTop: '20px', padding: '10px', backgroundColor: '#666', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer'}}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const PostCard = ({ post, currentUserId, onDelete }) => {
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this post?')) return;
+
+    setDeleting(true);
+    try {
+      const response = await fetch(`http://localhost:5000/api/posts/${post.id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        onDelete(post.id);
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
+    return date.toLocaleDateString();
+  };
+
+  const isOwnPost = post.owner_id === currentUserId;
+
+  return (
+    <div className="post-card">
+      <div className="post-header">
+        <div className="post-author">
+          <div className="post-avatar">
+            {post.display_name[0].toUpperCase()}
+          </div>
+          <span className="post-author-name">{post.display_name}</span>
+        </div>
+        {isOwnPost && (
+          <button 
+            className="post-delete-btn" 
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? 'Deleting...' : 'Delete'}
+          </button>
+        )}
+      </div>
+      <p className="post-content">{post.caption}</p>
+      <span className="post-timestamp">{formatTimestamp(post.created_at)}</span>
+    </div>
+  );
+};
+
+const PostsFeedModal = ({ posts, loadingPosts, currentUserId, onDelete, onClose }) => {
+  return (
+    <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100}}>
+      <div style={{backgroundColor: 'white', padding: '30px', borderRadius: '10px', width: '600px', maxWidth: '90%', maxHeight: '80vh', display: 'flex', flexDirection: 'column'}}>
+        <h2 style={{marginTop: 0, color: '#333'}}>For You:</h2>
+        <div style={{flex: 1, overflowY: 'auto', paddingRight: '15px'}}>
+          {loadingPosts ? (
+            <div className="posts-empty">Loading posts...</div>
+          ) : posts.length === 0 ? (
+            <div className="posts-empty">
+              No posts yet. Follow some users or create your first post!
+            </div>
+          ) : (
+            posts.map(post => (
+              <PostCard 
+                key={post.id} 
+                post={post} 
+                currentUserId={currentUserId}
+                onDelete={onDelete}
+              />
+            ))
+          )}
+        </div>
+        <button 
+          onClick={onClose} 
+          style={{marginTop: '20px', padding: '10px', backgroundColor: '#e23030', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer'}}>
+          Close Feed
+        </button>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const auth = useAuth();
   const [isLoginView, setIsLoginView] = useState(true);
@@ -295,7 +478,33 @@ function App() {
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
+  
+  const [posts, setPosts] = useState([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+  const [showCreatePostModal, setShowCreatePostModal] = useState(false); 
+  const [showFeedModal, setShowFeedModal] = useState(false);
 
+  const fetchPosts = async () => {
+    setLoadingPosts(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/posts/feed', {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPosts(data.posts);
+      }
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    } finally {
+      setLoadingPosts(false);
+    }
+  };
+
+  const handlePostDeleted = (postId) => {
+    setPosts(posts.filter(p => p.id !== postId));
+  };
+  
   const fetchUserProfile = async () => {
     if (!auth.isAuthenticated || !auth.userId) return;
     
@@ -320,7 +529,10 @@ function App() {
   };
 
   useEffect(() => {
-    fetchUserProfile();
+    if (auth.isAuthenticated) {
+      fetchUserProfile();
+      fetchPosts(); 
+    }
   }, [auth.isAuthenticated, auth.userId]);
 
   if (auth.isAuthenticated) {
@@ -338,64 +550,89 @@ function App() {
             onSave={fetchUserProfile} 
           />
         )}
-
         {showSearchModal && (
           <SearchModal 
-            onClose={() => {
-              setShowSearchModal(false);
-              fetchUserProfile();
-            }}
+            onClose={() => { setShowSearchModal(false); fetchUserProfile(); }}
             currentUserId={auth.userId}
+          />
+        )}
+        {showCreatePostModal && (
+          <CreatePostModal 
+            onClose={() => setShowCreatePostModal(false)}
+            onPostCreated={fetchPosts} 
+          />
+        )}
+        {showFeedModal && (
+          <PostsFeedModal 
+            posts={posts}
+            loadingPosts={loadingPosts}
+            currentUserId={auth.userId}
+            onDelete={handlePostDeleted}
+            onClose={() => setShowFeedModal(false)}
           />
         )}
 
         <div className="profile-container">
           <div className="profile-card">
-              <div className="profile-pic">
-                <div className="avatar"></div>
-                
-                <h2 className="username" style={{marginLeft: '4px'}}>{displayName}
-                  <div className="online-status">
-                    <span className="status-dot online"></span>
-                    <span className="status-text">Online</span>
-                  </div>
-                </h2>
-
-                <div style={{marginTop: '10px', marginLeft: '15px', textAlign: 'center'}}>
-                  <div style={{color: 'gray', fontWeight: 'bold'}}>
-                    {followerCount}
-                  </div>
-                  <label style={{fontWeight: 'bold', color: 'gray'}}>
-                    Followers
-                  </label>
+            <div className="profile-pic">
+              <div className="avatar"></div>
+              
+              <h2 className="username" style={{marginLeft: '4px', maxWidth: '120px'}}>{displayName}
+                <div className="online-status">
+                  <span className="status-dot online"></span>
+                  <span className="status-text">Online</span>
                 </div>
+              </h2>
 
-                <div style={{marginTop: '10px', textAlign: 'center'}}>
-                  <div style={{color: 'gray', fontWeight: 'bold'}}>
-                    {followingCount}
-                  </div>
-                  <label style={{fontWeight: 'bold', color: 'gray'}}>
-                    Following
-                  </label>
-                </div>
-
-                <button onClick={() => setShowSearchModal(true)} style={{marginBottom:'30px', marginLeft:'980px', background:'white', fontSize: '2rem' }}>
-                🔍
-                </button>
+              <div style={{marginTop: '10px', marginLeft: '15px', textAlign: 'center'}}>
+                <div style={{color: 'gray', fontWeight: 'bold'}}>{followerCount}</div>
+                <label style={{fontWeight: 'bold', color: 'gray'}}>Followers</label>
               </div>
-              <p style={{ color: '#666', textAlign: 'left', marginTop: '10px', maxWidth: '180px'}}>
-                {userBio}
-              </p>
+              <div style={{marginTop: '10px', textAlign: 'center'}}>
+                <div style={{color: 'gray', fontWeight: 'bold'}}>{followingCount}</div>
+                <label style={{fontWeight: 'bold', color: 'gray'}}>Following</label>
+              </div>
 
-              <button className="edit-btn" onClick={() => setShowEditModal(true)} style={{marginLeft:'15px'}}>
-                Edit Profile
+              <button onClick={() => setShowSearchModal(true)} style={{marginBottom:'30px', marginLeft:'980px', background:'white', fontSize: '2rem' }}>
+                🔍
               </button>
+            </div>
 
-              <button className="logout-btn" onClick={auth.logout}>
-                Log Out
-              </button>
+            <p style={{ color: '#666', textAlign: 'left', marginTop: '10px', maxWidth: '180px'}}>
+              {userBio}
+            </p>
+
+            <button className="edit-btn" onClick={() => setShowEditModal(true)} style={{marginLeft:'15px'}}>
+              Edit Profile
+            </button>
+            
+            <button 
+              className="edit-btn" 
+              onClick={() => setShowFeedModal(true)} 
+              style={{marginLeft:'15px', marginTop: '10px', backgroundColor: '#e23030'}}>
+              View Feed
+            </button> 
+
+            <button className="logout-btn" onClick={auth.logout}>
+              Log Out
+            </button>
           </div>
         </div>
+
+        <button className="edit-btn"
+          onClick={() => setShowCreatePostModal(true)} 
+          style={{ 
+            position: 'fixed', 
+            bottom: '40px', 
+            right: '90px',
+            background: 'linear-gradient(135deg, #e23030 0%, #3f3e40 100%)',
+            color: 'white',
+            border: 'none',
+            fontSize: '1rem',
+            cursor: 'pointer'
+          }}>
+          Post
+        </button>
       </div>
     );
   }
